@@ -22,6 +22,11 @@ describe("Octo config", function()
         assert.True(vim.tbl_count(require("octo.config").validate_config()) ~= 0)
       end)
 
+      it("should return valid when picker is mini.pick", function()
+        config.values.picker = "mini.pick"
+        assert.True(vim.tbl_count(require("octo.config").validate_config()) == 0)
+      end)
+
       it("should return invalid when picker_config isn't a table", function()
         config.values.picker_config = "cfg"
         assert.True(vim.tbl_count(require("octo.config").validate_config()) ~= 0)

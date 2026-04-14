@@ -112,6 +112,7 @@ local function check_picker()
     telescope = "telescope",
     ["fzf-lua"] = "fzf-lua",
     snacks = "snacks",
+    ["mini.pick"] = "mini.pick",
   }
   local mod = picker_module[picker]
   if mod then

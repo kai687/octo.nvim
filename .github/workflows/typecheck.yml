@@ -38,6 +38,7 @@ jobs:
           DEPS=(
             "nvim-lua/plenary.nvim"
             "folke/snacks.nvim"
+            "nvim-mini/mini.pick"
             "nvim-telescope/telescope.nvim"
             "ibhagwan/fzf-lua"
             "nvim-tree/nvim-web-devicons"
