@@ -1871,22 +1871,22 @@ function M.create_pr(is_draft)
         end,
       }
       utils.info(string.format("Pushing '%s' to '%s:%s' ...", local_branch, remote, remote_branch))
-      local ok, Job = pcall(require, "plenary.job")
-      if ok then
-        local job = Job:new {
-          command = "git",
-          args = { "push", remote, local_branch .. ":" .. remote_branch },
-          cwd = vim.fn.getcwd(),
-        }
-        job:sync()
-        --local stdout = table.concat(job:result(), "\n")
-        local stderr = table.concat(job:stderr_result(), "\n")
+      local stdout, stderr, status = require("octo.process").run_sync {
+        cmd = "git",
+        args = { "push", remote, local_branch .. ":" .. remote_branch },
+        cwd = vim.fn.getcwd(),
+      }
+      if status ~= 0 then
         if not utils.is_blank(stderr) then
           utils.error(stderr)
+        elseif not utils.is_blank(stdout) then
+          utils.error(stdout)
+        else
+          utils.error "Aborting PR creation"
         end
-      else
-        utils.error "Aborting PR creation"
         return
+      elseif not utils.is_blank(stderr) then
+        utils.error(stderr)
       end
     else
       utils.error "Aborting PR creation"

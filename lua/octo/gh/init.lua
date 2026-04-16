@@ -2,7 +2,7 @@ local config = require "octo.config"
 local fragments = require "octo.gh.fragments"
 local queries = require "octo.gh.queries"
 local mutations = require "octo.gh.mutations"
-local _, Job = pcall(require, "plenary.job")
+local process = require "octo.process"
 local vim = vim
 
 ---@class octo.GH
@@ -61,16 +61,12 @@ function M.get_user_name(remote_hostname)
     remote_hostname = require("octo.utils").get_remote_host()
   end
 
-  ---@diagnostic disable-next-line: missing-fields
-  local job = Job:new {
-    enable_recording = true,
-    command = config.values.gh_cmd,
+  local stdout, stderr = process.run_sync {
+    cmd = config.values.gh_cmd,
     args = { "auth", "status", "--hostname", remote_hostname },
     env = get_env(),
+    timeout = config.values.timeout,
   }
-  job:sync(config.values.timeout)
-  local stderr = table.concat(job:stderr_result(), "\n")
-  local stdout = table.concat(job:result(), "\n")
   -- Newer versions of the gh cli have a different message. See #467
   local name_err = string.match(stderr, "Logged in to [^%s]+ as ([^%s]+)")
     or string.match(stderr, "Logged in to [^%s]+ account ([^%s]+)")
@@ -104,15 +100,12 @@ function M.setup()
   queries.setup()
   mutations.setup()
   _G.octo_pv2_fragment = ""
-  ---@diagnostic disable-next-line: missing-fields
-  Job:new({
-    enable_recording = true,
-    command = config.values.gh_cmd,
+  process.run_async {
+    cmd = config.values.gh_cmd,
     args = { "auth", "status" },
     env = get_env(),
-    on_exit = vim.schedule_wrap(function(j_self, _, _)
+    cb = function(stdout)
       local use_proj_v2 = config.values.default_to_projects_v2
-      local stdout = table.concat(j_self:result(), "\n")
       local all_scopes = string.match(stdout, " Token scopes: (.*)") or ""
       local split = vim.split(all_scopes, ", ")
       for idx, split_scope in ipairs(split) do
@@ -125,8 +118,8 @@ function M.setup()
           require("octo.utils").error "Cannot request Projects v2: Missing scope 'read:project' or 'project'"
         end
       end
-    end),
-  }):start()
+    end,
+  }
 end
 
 ---Create a callback function for the job
@@ -186,9 +179,6 @@ end
 ---@return string? output
 ---@return string? stderr
 local function run(opts)
-  if not Job then
-    return
-  end
   local remote_hostname = require("octo.utils").get_remote_host()
 
   -- Lazy load viewer name on the first gh command
@@ -239,37 +229,33 @@ local function run(opts)
     env.GH_DEBUG = "1"
   end
 
-  ---@diagnostic disable-next-line: missing-fields
-  local job = Job:new {
-    enable_recording = true,
-    command = config.values.gh_cmd,
-    args = opts.args,
-    on_stdout = vim.schedule_wrap(function(err, data, _)
-      if mode == "async" and opts.stream_cb then
-        opts.stream_cb(data, err)
-      end
-    end),
-    on_exit = vim.schedule_wrap(function(j_self, status, _)
-      if mode == "async" and opts.cb then
-        local output = table.concat(j_self:result(), "\n")
-        if do_slurp then
-          output = native_slurp(output)
-        end
-        local stderr = table.concat(j_self:stderr_result(), "\n")
-        opts.cb(output, stderr, status)
-      end
-    end),
-    env = env,
-  }
   if mode == "sync" then
-    job:sync(conf.timeout)
-    local output = table.concat(job:result(), "\n")
+    local output, stderr = process.run_sync {
+      cmd = config.values.gh_cmd,
+      args = opts.args,
+      env = env,
+      timeout = conf.timeout,
+    }
     if do_slurp then
       output = native_slurp(output)
     end
-    return output, table.concat(job:stderr_result(), "\n")
+    return output, stderr
   else
-    job:start()
+    process.run_async {
+      cmd = config.values.gh_cmd,
+      args = opts.args,
+      env = env,
+      timeout = conf.timeout,
+      stream_cb = opts.stream_cb,
+      cb = function(output, stderr, status)
+        if do_slurp then
+          output = native_slurp(output)
+        end
+        if opts.cb then
+          opts.cb(output, stderr, status)
+        end
+      end,
+    }
   end
 end
 

@@ -3,7 +3,7 @@ local constants = require "octo.constants"
 local gh = require "octo.gh"
 local graphql = require "octo.gh.graphql"
 local queries = require "octo.gh.queries"
-local _, Job = pcall(require, "plenary.job")
+local process = require "octo.process"
 local release = require "octo.release"
 local notify = require "octo.notify"
 local uri = require "octo.uri"
@@ -266,18 +266,17 @@ end
 function M.parse_git_remote()
   local conf = config.values
   local aliases = conf.ssh_aliases
-  ---@diagnostic disable-next-line: missing-fields
-  local job = Job:new { command = "git", args = { "remote", "-v" }, cwd = vim.fn.getcwd() }
-  job:sync()
-  local stderr = table.concat(job:stderr_result(), "\n")
+  local stdout, stderr = process.run_sync {
+    cmd = "git",
+    args = { "remote", "-v" },
+    cwd = vim.fn.getcwd(),
+  }
   if not M.is_blank(stderr) then
     return {}
   end
   ---@type table<string, OctoRepo>
   local remotes = {}
-  for _, line in
-    ipairs(job:result() --[[@as string[] ]])
-  do
+  for _, line in ipairs(vim.split(stdout, "\n", { trimempty = true })) do
     local name, url = line:match "^(%S+)%s+(%S+)"
     if name then
       local remote = M.parse_remote_url(url, aliases)
@@ -335,22 +334,13 @@ end
 ---@param commit string
 ---@param cb fun(exists: boolean)
 function M.commit_exists(commit, cb)
-  if not Job then
-    return
-  end
-  ---@diagnostic disable-next-line: missing-fields
-  Job:new({
-    enable_recording = true,
-    command = "git",
+  process.run_async {
+    cmd = "git",
     args = { "cat-file", "-t", commit },
-    on_exit = vim.schedule_wrap(function(j_self, _, _)
-      if "commit" == M.trim(table.concat(j_self:result(), "\n")) then
-        cb(true)
-      else
-        cb(false)
-      end
-    end),
-  }):start()
+    cb = function(stdout)
+      cb("commit" == M.trim(stdout))
+    end,
+  }
 end
 
 ---Add a milestone to an issue or PR
@@ -473,22 +463,14 @@ end
 ---@param commit string
 ---@param cb fun(lines: string[])
 function M.get_file_at_commit(path, commit, cb)
-  if not Job then
-    return
-  end
-  ---@diagnostic disable-next-line: missing-fields
-  local job = Job:new {
-    enable_recording = true,
-    command = "git",
+  local output, stderr, status = process.run_sync {
+    cmd = "git",
     args = { "show", string.format("%s:%s", commit, path) },
   }
-  ---@type string[]?
-  local result = job:sync()
-  if not result then
+  if status ~= 0 or not M.is_blank(stderr) then
     M.error "Failed to get file contents"
     return
   end
-  local output = table.concat(result, "\n")
   cb(vim.split(output, "\n"))
 end
 
@@ -676,32 +658,23 @@ end
 
 ---Merges a PR by number
 function M.merge_pr(pr_number)
-  if not Job then
-    M.error "Aborting PR merge"
-    return
-  end
-
   local conf = config.values
   local args = { "pr", "merge", pr_number }
 
   M.insert_merge_flag(args, conf.default_merge_method)
   M.insert_delete_flag(args, conf.default_delete_branch)
 
-  ---@diagnostic disable-next-line: missing-fields
-  Job:new({
-    command = "gh",
+  process.run_async {
+    cmd = "gh",
     args = args,
-    on_exit = vim.schedule_wrap(function(job, code)
+    cb = function(_, stderr, code)
       if code == 0 then
         M.info("Merged PR " .. pr_number .. "!")
-      else
-        local stderr = table.concat(job:stderr_result(), "\n")
-        if not M.is_blank(stderr) then
-          M.error(stderr)
-        end
+      elseif not M.is_blank(stderr) then
+        M.error(stderr)
       end
-    end),
-  }):start()
+    end,
+  }
 end
 
 --- Formats a integer a large integer by taking the most significant digits with a suffix.

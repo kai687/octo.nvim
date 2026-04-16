@@ -90,18 +90,6 @@ local function check_gh_binary()
   end
 end
 
---- Check that plenary.nvim is installed (required for all gh CLI job execution).
-local function check_plenary()
-  if pcall(require, "plenary") then
-    vim.health.ok "`plenary.nvim` installed"
-  else
-    vim.health.error(
-      "`plenary.nvim` not found.",
-      { "Install nvim-lua/plenary.nvim — required for all GitHub API calls." }
-    )
-  end
-end
-
 --- Check that the configured picker plugin is installed.
 --- Skips the check when picker = "default" since that uses vim.ui.select.
 local function check_picker()
@@ -235,7 +223,6 @@ M.check = function()
 
   vim.health.start "Dependencies"
   check_gh_binary()
-  check_plenary()
   check_picker()
   check_devicons()
 

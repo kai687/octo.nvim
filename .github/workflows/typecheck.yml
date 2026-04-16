@@ -36,7 +36,6 @@ jobs:
         run: |
           mkdir -p deps
           DEPS=(
-            "nvim-lua/plenary.nvim"
             "folke/snacks.nvim"
             "nvim-mini/mini.pick"
             "nvim-telescope/telescope.nvim"

@@ -1,1 +1,1 @@
-return require("plenary.log").new { plugin = "fzf-octo" }
+return require "octo.log"

@@ -118,7 +118,6 @@ From any octo buffer, press `<CR>` in normal mode to see common actions.
     do so by running `gh auth refresh -s read:project`.
   - If you'd like to actually modify projects you can instead add the `project`
     scope to your token instead.
-- Install [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
 - Install one or none of:
   - [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
   - [fzf-lua](https://github.com/ibhagwan/fzf-lua)
@@ -173,7 +172,6 @@ For a basic installation using [`lazy.nvim`](https://lazy.folke.io/), try:
     },
   },
   dependencies = {
-    "nvim-lua/plenary.nvim",
     "nvim-telescope/telescope.nvim",
     -- OR "ibhagwan/fzf-lua",
     -- OR "folke/snacks.nvim",

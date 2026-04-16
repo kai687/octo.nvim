@@ -63,7 +63,14 @@ describe("Octo config", function()
       end)
 
       it("should return invalid when picker_config.snacks.actions contains non-function", function()
-        config.values.picker_config.snacks.actions = { issues = { ["<C-a>"] = "not a function" } }
+        config.values.picker_config.snacks.actions = {
+          issues = {
+            {
+              name = "open_in_browser",
+              fn = "not a function",
+            },
+          },
+        }
         assert.True(vim.tbl_count(require("octo.config").validate_config()) ~= 0)
       end)
 

@@ -12,7 +12,6 @@
       "$PWD/deps/luvit-meta/library",
       "$PWD/deps/snacks.nvim/lua",
       "$PWD/deps/mini.pick/lua",
-      "$PWD/deps/plenary.nvim/lua",
       "$PWD/deps/telescope.nvim/lua",
       "$PWD/deps/fzf-lua/lua",
       "$PWD/deps/nvim-web-devicons/lua"

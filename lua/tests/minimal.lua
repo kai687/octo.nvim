@@ -16,7 +16,6 @@ local function load_plugins()
     {
       "wbthomason/packer.nvim",
       -- plugins here
-      "nvim-lua/plenary.nvim",
       "nvim-telescope/telescope.nvim",
       --"pwntester/octo.nvim",
       "pwntester/octo.nvim",
