@@ -2,8 +2,8 @@
 -- https://github.com/sindrets/diffview.nvim/blob/main/lua/diffview/renderer.lua
 --
 local M = {}
-local web_devicons ---@module "nvim-web-devicons"
 local config = require "octo.config"
+local icons = require "octo.icons"
 local vim = vim
 
 ---@class HlData
@@ -98,11 +98,7 @@ function M.get_file_icon(name, ext, render_data, line_idx, offset)
     return " "
   end
 
-  if not web_devicons then
-    web_devicons = require "nvim-web-devicons"
-  end
-
-  local icon, hl = web_devicons.get_icon(name, ext)
+  local icon, hl = icons.get_file_icon(name, ext)
 
   if icon then
     if hl then

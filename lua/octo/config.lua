@@ -63,6 +63,7 @@ local M = {}
 ---@class OctoConfigFilePanel
 ---@field size number
 ---@field use_icons boolean
+---@field icon_provider "auto" | "mini.icons" | "nvim-web-devicons"
 
 ---@class OctoConfigUi
 ---@field use_signcolumn boolean
@@ -301,6 +302,7 @@ function M.get_default_values()
     file_panel = {
       size = 10,
       use_icons = true,
+      icon_provider = "auto",
     },
     colors = {
       white = "#ffffff",
@@ -769,6 +771,12 @@ function M.validate_config()
     if validate_type(config.file_panel, "file_panel", "table") then
       validate_type(config.file_panel.size, "file_panel.size", "number")
       validate_type(config.file_panel.use_icons, "file_panel.use_icons", "boolean")
+      validate_type(config.file_panel.icon_provider, "file_panel.icon_provider", "string")
+      validate_string_enum(
+        config.file_panel.icon_provider,
+        "file_panel.icon_provider",
+        { "auto", "mini.icons", "nvim-web-devicons" }
+      )
     end
     validate_aliases()
     validate_pickers()

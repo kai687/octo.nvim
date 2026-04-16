@@ -319,7 +319,8 @@ require"octo".setup {
   },
   file_panel = {
     size = 10,                             -- changed files panel rows
-    use_icons = true                       -- use web-devicons in file panel (if false, nvim-web-devicons does not need to be installed)
+    use_icons = true,                      -- use file icons in the review file panel
+    icon_provider = "auto"                -- "auto" prefers mini.icons, then nvim-web-devicons
   },
   colors = {                               -- used for highlight groups (see Colors section below)
     white = "#ffffff",
@@ -526,6 +527,8 @@ require"octo".setup {
   },
 }
 ```
+
+`file_panel.icon_provider = "auto"` prefers `mini.icons` when `require("mini.icons").setup()` has been called, then falls back to `nvim-web-devicons`.
 
 ## 🤖 Commands
 

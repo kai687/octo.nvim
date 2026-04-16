@@ -186,6 +186,16 @@ describe("Octo config", function()
         assert.True(vim.tbl_count(require("octo.config").validate_config()) ~= 0)
       end)
 
+      it("should return invalid when file_panel.icon_provider isn't a string", function()
+        config.values.file_panel.icon_provider = false
+        assert.True(vim.tbl_count(require("octo.config").validate_config()) ~= 0)
+      end)
+
+      it("should return invalid when file_panel.icon_provider isn't supported", function()
+        config.values.file_panel.icon_provider = "unknown"
+        assert.True(vim.tbl_count(require("octo.config").validate_config()) ~= 0)
+      end)
+
       it("should return invalid when colors isn't a table", function()
         config.values.colors = "not a table"
         assert.True(vim.tbl_count(require("octo.config").validate_config()) ~= 0)
@@ -199,6 +209,16 @@ describe("Octo config", function()
 
     describe("for good configs", function()
       it("should return valid for the default config", function()
+        assert.True(vim.tbl_count(require("octo.config").validate_config()) == 0)
+      end)
+
+      it("should return valid when file_panel.icon_provider is mini.icons", function()
+        config.values.file_panel.icon_provider = "mini.icons"
+        assert.True(vim.tbl_count(require("octo.config").validate_config()) == 0)
+      end)
+
+      it("should return valid when file_panel.icon_provider is nvim-web-devicons", function()
+        config.values.file_panel.icon_provider = "nvim-web-devicons"
         assert.True(vim.tbl_count(require("octo.config").validate_config()) == 0)
       end)
     end)

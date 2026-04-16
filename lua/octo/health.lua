@@ -117,20 +117,50 @@ local function check_picker()
   end
 end
 
---- Check that nvim-web-devicons is installed when file_panel.use_icons is enabled.
-local function check_devicons()
+--- Check that the configured file icon provider is available when file_panel.use_icons is enabled.
+local function check_file_icons()
   local config = require "octo.config"
+  local icons = require "octo.icons"
   if not config.values.file_panel.use_icons then
     return
   end
-  if pcall(require, "nvim-web-devicons") then
-    vim.health.ok "`nvim-web-devicons` installed"
-  else
+
+  local configured_provider = config.values.file_panel.icon_provider
+  local provider = icons.get_file_icon_provider()
+  if provider == "mini.icons" then
+    vim.health.ok "`mini.icons` enabled for file panel icons"
+    return
+  end
+
+  if provider == "nvim-web-devicons" then
+    vim.health.ok "`nvim-web-devicons` installed for file panel icons"
+    return
+  end
+
+  if configured_provider == "mini.icons" then
+    vim.health.warn(
+      "`mini.icons` not enabled.",
+      {
+        "Call `require('mini.icons').setup()` before octo.nvim, choose `file_panel.icon_provider = 'nvim-web-devicons'`, or set `file_panel.use_icons = false`.",
+      }
+    )
+    return
+  end
+
+  if configured_provider == "nvim-web-devicons" then
     vim.health.warn(
       "`nvim-web-devicons` not found.",
-      { "Install nvim-tree/nvim-web-devicons, or set `file_panel.use_icons = false` in your octo.nvim config." }
+      { "Install nvim-tree/nvim-web-devicons, choose `file_panel.icon_provider = 'mini.icons'`, or set `file_panel.use_icons = false`." }
     )
+    return
   end
+
+  vim.health.warn(
+    "No supported file icon provider found.",
+    {
+      "Set up `mini.icons`, install nvim-tree/nvim-web-devicons, or set `file_panel.use_icons = false` in your octo.nvim config.",
+    }
+  )
 end
 
 --- Check GitHub authentication via `gh auth status --json hosts`.
@@ -224,7 +254,7 @@ M.check = function()
   vim.health.start "Dependencies"
   check_gh_binary()
   check_picker()
-  check_devicons()
+  check_file_icons()
 
   vim.health.start "Authentication"
   check_auth()
