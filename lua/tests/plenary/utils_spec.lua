@@ -137,6 +137,12 @@ describe("get_pages", function()
     local actual = this.get_pages(text)
     eq(actual, { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } })
   end)
+  it("ignores trailing blank lines", function()
+    local text = "[1,2,3]\n[4,5,6]\n"
+    local actual = this.get_pages(text)
+
+    eq(actual, { { 1, 2, 3 }, { 4, 5, 6 } })
+  end)
 end)
 describe("get_flatten_pages", function()
   it("handles empty single page", function()
@@ -163,6 +169,12 @@ describe("get_flatten_pages", function()
     ]]
     local actual = this.get_flatten_pages(text)
     eq(actual, { { a = 1 }, { b = 2, name = "foo" }, { c = 3 }, { d = 4 } })
+  end)
+  it("ignores trailing blank lines", function()
+    local text = "[1,2,3]\n[4,5,6]\n"
+    local actual = this.get_flatten_pages(text)
+
+    eq(actual, { 1, 2, 3, 4, 5, 6 })
   end)
 end)
 describe("parse_url", function()
